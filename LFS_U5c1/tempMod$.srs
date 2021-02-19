@@ -1,0 +1,11 @@
+{
+  "sampleCounter": 1,
+  "robotSpeed": 0,
+  "robotSidewaysSpeed": 0,
+  "robotTurnRate": 0,
+  "markerY": 45,
+  "markerX": 99.6875,
+  "timerTick": 4650,
+  "robotHeading": 327.05743408203125,
+  "sampleTempValue": 99
+}

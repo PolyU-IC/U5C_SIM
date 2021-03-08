@@ -43,28 +43,28 @@ int k_SKIP=14;
 int k_TURN=22;
 int cycle=0;
 
-int k_LINE=0;
-int k_LFB=1;
-int k_RGB=2;
-int k_TJ=3;
+int LM_Line=0;
+int LM_LeftJoint=1;
+int LM_RightJoint=2;
+int LM_TJoint=3;
 
-int readMark()
+int findLM()                  //find landmark
 {
-  int result = k_LINE; //default Line
+  int lm = LM_Line; //default Line
     if ((sensorL.read()<=0.151) & (sensorR.read()<=0.15))
     {
-       result= k_TJ; //T-joint 
+       lm= LM_TJoint; //T-joint 
     }
-    else if ((sensorL.read()<=0.15) & (sensorR.read()>=1))
+    else if ((sensorL.read()<=0.4) & (sensorR.read()>=1))
     {
-       result = k_LFB;  //LF-Branch 
+       lm = LM_LeftJoint;  //LF-Branch 
       
     } 
     else if ((sensorL.read()>=1) & (sensorR.read()<=0.15))
     {
-      result = k_RGB;  //RG-Branch
+      lm = LM_RightJoint;  //RG-Branch
     }
-   return result;
+   return lm;
 
 }
 
@@ -85,7 +85,7 @@ void userControllerUpdate ()
   
   // your robot controller code here - this method called every time step
   // crude attempt to control velocity as function of current centroid error 
-  Kp=4; //was 10
+  Kp=2; //was 10
   float[] sensor =  sensor1.readArray();   // readArray() returns reference to sensor array of floats 
   
   float e = calcSignedCentroidSingleDarkSpan(sensor) ;   //error in pixels of line intersection with sensor
@@ -145,60 +145,56 @@ void userControllerUpdate ()
     lstep=step;
     print("\r\n");
   }
-  if (step == 0)
+  if (step == 0)    //0=LM_Line
   {
     Action = Act_fwd;
-     if (readMark()==2) // R-Turn
+     if (findLM()==LM_RightJoint) // LM_RightJoint
      {
-        step=1;
+        step=1;          
      }
-  } else if (step == 1) {
-   Action = Act_skip;
-   if (counter > k_SKIP)
-     step=2;
-  } else if (step == 2) {
+  } else if (step == 1) {      
+   Action = Act_turn_rg;
+   if (counter > k_TURN+5)
+      step=2;
+  
+  } else if (step == 2) {      
     Action = Act_fwd;
-    if (readMark()==k_RGB) // R-Turn
+    if (findLM()==LM_LeftJoint) // detect the left joint
     {
       step=3;
     }
-  } else if (step == 3) {
-   Action = Act_skip;
-   if (counter > k_SKIP)
+  } else if (step == 3) {      
+   Action = Act_turn_lf;
+//   Action = Act_stop;
+   if (counter > k_TURN+5)
       step=4;
   } else if (step == 4) {
     Action = Act_fwd;
-    if (readMark()==k_RGB) // R-Turn
+    if (findLM()==LM_LeftJoint) // detect the left joint
     {
       step=5;
     }
   } else if (step == 5) {
-   Action = Act_turn_rg;
-   if (counter > k_TURN+5)
-      step=6;
+    Action = Act_skip;
+    if (counter > k_SKIP)
+    {
+      step=6; 
+    }
   } else if (step == 6) {
     Action = Act_fwd;
-    if (readMark()==k_TJ) // T-joint
+   if (findLM()==LM_LeftJoint) // detect the left joint
     {
       step=7;
     }
   } else if (step == 7) {
-   Action = Act_turn_lf;
-   if (counter > 35)
-      step=8;
+    Action = Act_skip;
+    if (counter > k_SKIP)
+    {
+      step=8; 
+    }
   } else if (step == 8) {
     Action = Act_fwd;
-    if (readMark()==k_LFB) // L-Turn
-    {
-      step=9;
-    }
-  } else if (step == 9) {
-   Action = Act_skip;
-   if (counter > k_SKIP)
-      step=10;
-  } else if (step == 10) {
-    Action = Act_fwd;
-    if (readMark()==k_TJ) // T-joint
+    if (findLM()==LM_TJoint) // detect the T-joint
     {
    Action = Act_stop;
     }
@@ -238,7 +234,7 @@ void userControllerUpdate ()
     //PID Controller
     lfs.setTargetTurnRate(-e * Kp + (e - ePrev) * Kd);   // turn rate in degrees per second
     ePrev = e;  
-    lfs.setTargetSpeed (maxSpeed*0.8);
+    lfs.setTargetSpeed (maxSpeed);    //0.8
   } else if (Action==Act_skip) {
     counter++;
   }

@@ -51,7 +51,7 @@ int LM_TJoint=3;
 int findLM()                  //find landmark
 {
   int lm = LM_Line; //default Line
-    if ((sensorL.read()<=0.151) & (sensorR.read()<=0.15))
+    if ((sensorL.read()<=0.2) & (sensorR.read()<=0.2))
     {
        lm= LM_TJoint; //T-joint 
     }
@@ -60,7 +60,7 @@ int findLM()                  //find landmark
        lm = LM_LeftJoint;  //LF-Branch 
       
     } 
-    else if ((sensorL.read()>=1) & (sensorR.read()<=0.15))
+    else if ((sensorL.read()>=1) & (sensorR.read()<=0.4))
     {
       lm = LM_RightJoint;  //RG-Branch
     }
@@ -86,6 +86,7 @@ void userControllerUpdate ()
   // your robot controller code here - this method called every time step
   // crude attempt to control velocity as function of current centroid error 
   Kp=2; //was 10
+  Kd=30;
   float[] sensor =  sensor1.readArray();   // readArray() returns reference to sensor array of floats 
   
   float e = calcSignedCentroidSingleDarkSpan(sensor) ;   //error in pixels of line intersection with sensor
